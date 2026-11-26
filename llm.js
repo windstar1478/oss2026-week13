@@ -6,31 +6,32 @@
 //          Then send it as the first message, before the user's message, in ask().
 const SYSTEM = '답변에는 마크다운과 관련된 기호를 사용하지 않고 텍스트만을 이용하며, 말투는 "~해요"로 끝내는 존댓말을 사용한다. 답의 길이는 줄바꿈 없는 한 문단, 세 문장 이내.'
 
-// ask("a question")  ->  the model's answer, as a string
-export async function ask(question) {
+async function complete(messages) {
   const res = await fetch(`${process.env.LLM_BASE_URL}/chat/completions`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${process.env.LLM_API_KEY}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({
-      model: process.env.LLM_MODEL,
-      messages: [{ role: "user", content: question }, { role: "system", content: SYSTEM}],
-    }),
+    body: JSON.stringify({ model: process.env.LLM_MODEL, messages }),
   });
-
   if (!res.ok) throw new Error(`LLM: HTTP ${res.status}`);
   const data = await res.json();
-
   return data.choices[0].message.content.trim();
+}
+
+// ask("a question")  ->  the model's answer, as a string
+export async function ask(question) {
+  return complete([
+    { role: "system", content: SYSTEM },
+    { role: "user", content: question },
+  ]);
 }
 
 // chat([{ role: "user", content: "..." }, { role: "assistant", content: "..." }, ...])
 //   ->  the model's next answer, as a string
 export async function chat(history) {
-  // TODO P5: write this function (see problems/P5_chat.md). Delete the throw line below.
-  throw new Error("chat() is not written yet");
+  return complete([{ role: "system", content: SYSTEM }, ...history]);
 }
 
 // analyze("a review")  ->  an object, not a sentence:
