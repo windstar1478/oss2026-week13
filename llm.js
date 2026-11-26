@@ -7,8 +7,22 @@
 
 // ask("a question")  ->  the model's answer, as a string
 export async function ask(question) {
-  // TODO P3: write this function (see problems/P3_ask.md). Delete the throw line below.
-  throw new Error("ask() is not written yet");
+  const res = await fetch(`${process.env.LLM_BASE_URL}/chat/completions`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${process.env.LLM_API_KEY}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: process.env.LLM_MODEL,
+      messages: [{ role: "user", content: question }],
+    }),
+  });
+
+  if (!res.ok) throw new Error(`LLM: HTTP ${res.status}`);
+  const data = await res.json();
+
+  return data.choices[0].message.content.trim();
 }
 
 // chat([{ role: "user", content: "..." }, { role: "assistant", content: "..." }, ...])
